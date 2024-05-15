@@ -1,0 +1,9 @@
+apiVersion: webapp.yourdomain.com/v1
+kind: ClusterScan
+metadata:
+  labels:
+    app.kubernetes.io/name: kubernetescontroller
+    app.kubernetes.io/managed-by: kustomize
+  name: clusterscan-sample
+spec:
+  # TODO(user): Add fields here

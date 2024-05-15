@@ -1,0 +1,27 @@
+# permissions for end users to edit clusterscans.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: kubernetescontroller
+    app.kubernetes.io/managed-by: kustomize
+  name: clusterscan-editor-role
+rules:
+- apiGroups:
+  - webapp.yourdomain.com
+  resources:
+  - clusterscans
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - webapp.yourdomain.com
+  resources:
+  - clusterscans/status
+  verbs:
+  - get
