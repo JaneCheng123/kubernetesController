@@ -8,7 +8,7 @@ metadata:
   name: clusterscan-viewer-role
 rules:
 - apiGroups:
-  - webapp.yourdomain.com
+  - webapp.v1.com
   resources:
   - clusterscans
   verbs:
@@ -16,7 +16,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - webapp.yourdomain.com
+  - webapp.v1.com
   resources:
   - clusterscans/status
   verbs:

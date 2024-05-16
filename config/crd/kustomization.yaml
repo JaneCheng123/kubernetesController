@@ -2,7 +2,7 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/webapp.yourdomain.com_clusterscans.yaml
+- bases/webapp.v1.com_clusterscans.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:

@@ -8,7 +8,7 @@ metadata:
   name: clusterscan-editor-role
 rules:
 - apiGroups:
-  - webapp.yourdomain.com
+  - webapp.v1.com
   resources:
   - clusterscans
   verbs:
@@ -20,7 +20,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - webapp.yourdomain.com
+  - webapp.v1.com
   resources:
   - clusterscans/status
   verbs:

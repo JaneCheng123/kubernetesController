@@ -1,4 +1,4 @@
-apiVersion: webapp.yourdomain.com/v1
+apiVersion: webapp.v1.com/v1
 kind: ClusterScan
 metadata:
   labels:
