@@ -17,25 +17,22 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // ClusterScanSpec defines the desired state of ClusterScan
 type ClusterScanSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of ClusterScan. Edit clusterscan_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Cron format for recurring jobs, empty for one-time jobs
+	Schedule    string         `json:"schedule,omitempty"`
+	JobTemplate corev1.PodSpec `json:"jobTemplate"`
 }
 
 // ClusterScanStatus defines the observed state of ClusterScan
 type ClusterScanStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	LastScheduledTime metav1.Time `json:"lastScheduledTime,omitempty"`
 }
 
 //+kubebuilder:object:root=true
