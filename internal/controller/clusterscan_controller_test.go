@@ -18,17 +18,25 @@ package controller
 
 import (
 	"context"
+	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	webappv1 "github.com/JaneCheng123/kubernetesController/api/v1"
+	scanv1 "github.com/JaneCheng123/kubernetesController/api/v1"
 )
+
+func init() {
+	_ = scanv1.AddToScheme(scheme.Scheme)
+}
 
 var _ = Describe("ClusterScan Controller", func() {
 	Context("When reconciling a resource", func() {
@@ -38,28 +46,37 @@ var _ = Describe("ClusterScan Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
-		clusterscan := &webappv1.ClusterScan{}
+		clusterscan := &scanv1.ClusterScan{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind ClusterScan")
 			err := k8sClient.Get(ctx, typeNamespacedName, clusterscan)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &webappv1.ClusterScan{
+				resource := &scanv1.ClusterScan{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: scanv1.ClusterScanSpec{
+						Schedule: "*/1 * * * *",
+						JobTemplate: corev1.PodSpec{
+							Containers: []corev1.Container{{
+								Name:    "busybox",
+								Image:   "busybox",
+								Command: []string{"sh", "-c", "echo hello"},
+							}},
+							RestartPolicy: corev1.RestartPolicyOnFailure,
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &webappv1.ClusterScan{}
+			resource := &scanv1.ClusterScan{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -77,8 +94,72 @@ var _ = Describe("ClusterScan Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })
+
+func TestConstructJob(t *testing.T) {
+	clusterScan := &scanv1.ClusterScan{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-clusterscan",
+			Namespace: "default",
+		},
+		Spec: scanv1.ClusterScanSpec{
+			JobTemplate: corev1.PodSpec{
+				Containers: []corev1.Container{{
+					Name:    "security-scan",
+					Image:   "busybox",
+					Command: []string{"sh", "-c", "echo hello"},
+				}},
+				RestartPolicy: corev1.RestartPolicyOnFailure,
+			},
+		},
+	}
+
+	job := constructJob(clusterScan)
+	assert.Equal(t, job.Spec.Template.Spec.Containers[0].Name, "security-scan")
+	assert.Equal(t, job.Spec.Template.Spec.Containers[0].Image, "busybox")
+	assert.Equal(t, job.Spec.Template.Spec.RestartPolicy, corev1.RestartPolicyOnFailure)
+}
+
+func TestConstructCronJob(t *testing.T) {
+	clusterScan := &scanv1.ClusterScan{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-clusterscan",
+			Namespace: "default",
+		},
+		Spec: scanv1.ClusterScanSpec{
+			Schedule: "*/1 * * * *",
+			JobTemplate: corev1.PodSpec{
+				Containers: []corev1.Container{{
+					Name:    "security-scan",
+					Image:   "busybox",
+					Command: []string{"sh", "-c", "echo hello"},
+				}},
+				RestartPolicy: corev1.RestartPolicyOnFailure,
+			},
+		},
+	}
+
+	cronJob := constructCronJob(clusterScan)
+	assert.Equal(t, cronJob.Spec.Schedule, "*/1 * * * *")
+	assert.Equal(t, cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Name, "security-scan")
+	assert.Equal(t, cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Image, "busybox")
+	assert.Equal(t, cronJob.Spec.JobTemplate.Spec.Template.Spec.RestartPolicy, corev1.RestartPolicyOnFailure)
+}
+
+func TestGetNextSchedule(t *testing.T) {
+	clusterScan := &scanv1.ClusterScan{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-clusterscan",
+			Namespace: "default",
+		},
+		Spec: scanv1.ClusterScanSpec{
+			Schedule: "*/1 * * * *",
+		},
+	}
+
+	reconciler := &ClusterScanReconciler{}
+	nextRun := reconciler.getNextSchedule(clusterScan)
+	assert.NotEqual(t, nextRun, time.Time{})
+}

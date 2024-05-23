@@ -26,13 +26,21 @@ import (
 // ClusterScanSpec defines the desired state of ClusterScan
 type ClusterScanSpec struct {
 	// Cron format for recurring jobs, empty for one-time jobs
-	Schedule    string         `json:"schedule,omitempty"`
-	JobTemplate corev1.PodSpec `json:"jobTemplate"`
+	Schedule                   string         `json:"schedule,omitempty"`
+	JobTemplate                corev1.PodSpec `json:"jobTemplate"`
+	SecurityTool               string         `json:"securityTool,omitempty"`
+	ConcurrencyPolicy          string         `json:"concurrencyPolicy,omitempty"`
+	Suspend                    *bool          `json:"suspend,omitempty"`
+	StartingDeadlineSeconds    *int64         `json:"startingDeadlineSeconds,omitempty"`
+	SuccessfulJobsHistoryLimit *int32         `json:"successfulJobsHistoryLimit,omitempty"`
+	FailedJobsHistoryLimit     *int32         `json:"failedJobsHistoryLimit,omitempty"`
 }
 
 // ClusterScanStatus defines the observed state of ClusterScan
 type ClusterScanStatus struct {
-	LastScheduledTime metav1.Time `json:"lastScheduledTime,omitempty"`
+	LastScheduleTime   *metav1.Time `json:"lastScheduleTime,omitempty"`
+	LastSuccessfulTime *metav1.Time `json:"lastSuccessfulTime,omitempty"`
+	JobStatus          string       `json:"jobStatus,omitempty"`
 }
 
 //+kubebuilder:object:root=true
